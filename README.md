@@ -48,9 +48,9 @@ Live App:[Click here to access the live app](https://stockpriceprediction-1-c2l7
 
 Live Deployment :
 
-![Render](screenshots/StockPrice_render_deploy_live.png)
+![Render](Screenshots/StockPrice_render_deploy_live.PNG)
 
 Web Application
 
-![Prediction Result](screenshots/Web_App_Prediction.png)
+![Prediction Result](Screenshots/Web_App_Prediction.PNG)
 
