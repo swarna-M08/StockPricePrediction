@@ -10,7 +10,6 @@ logging.getLogger('absl').setLevel('ERROR')  # Hide absl warnings
 # app.py
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import numpy as np
@@ -19,9 +18,6 @@ from tensorflow.keras.models import load_model
 
 # Initialize FastAPI app
 app = FastAPI()
-
-# Mount static folder (optional)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Templates folder
 templates = Jinja2Templates(directory="templates")
