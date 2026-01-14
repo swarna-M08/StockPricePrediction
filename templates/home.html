@@ -5,25 +5,24 @@
     <title>Stock Price Prediction</title>
     <style>
         body {
-            font-family: "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, #e0e7ff, #fdf2f8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #f3e5f5);
         }
 
         .container {
+            max-width: 600px;
+            margin: 40px auto;
             background: #ffffff;
             padding: 25px 30px;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         h1 {
             text-align: center;
+            font-size: 24px;
             color: #1e293b;
             margin-bottom: 20px;
         }
@@ -31,27 +30,35 @@
         label {
             font-size: 14px;
             color: #334155;
-            display: block;
             margin-top: 10px;
+            display: block;
         }
 
         input {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-top: 6px;
             border-radius: 6px;
             border: 1px solid #cbd5e1;
+            background: #f8fafc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #ffffff;
         }
 
         button {
             width: 100%;
-            padding: 10px;
-            margin-top: 15px;
-            border: none;
-            border-radius: 8px;
+            margin-top: 20px;
+            padding: 12px;
+            font-size: 16px;
             background: linear-gradient(90deg, #6366f1, #8b5cf6);
             color: white;
-            font-size: 15px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
         }
 
@@ -60,64 +67,43 @@
         }
 
         .result {
-            margin-top: 15px;
-            padding: 12px;
+            margin-top: 20px;
+            padding: 15px;
             background: #eef2ff;
             border-left: 4px solid #6366f1;
             border-radius: 6px;
             text-align: center;
-            font-weight: bold;
+        }
+
+        .result h3 {
+            margin: 0;
+            font-size: 16px;
             color: #1e3a8a;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Stock Price Prediction (Next Day)</h1>
 
-<div class="container">
-    <h1>Stock Price Prediction</h1>
+        <form action="/predict" method="post">
+            <label>Enter last 60 stock prices (comma-separated)</label>
+            <input type="text" name="prices" placeholder="e.g., 150.2,151.5,...,187.5" required>
+            <div class="note">Enter exactly 60 values, separated by commas.</div>
+            <button type="submit">Predict</button>
+        </form>
 
-    <label>Enter last 60 closing prices (comma-separated)</label>
-    <input type="text" id="last60" placeholder="e.g. 150.0,151.2,152.3,...">
-    <button onclick="predict()">Predict Next 7 Days</button>
-
-    <div id="result" class="result" style="display:none;"></div>
-</div>
-
-<script>
-async function predict() {
-    const inputField = document.getElementById("last60");
-    const resultDiv = document.getElementById("result");
-    const inputStr = inputField.value.trim();
-    const last60 = inputStr.split(',').map(x => parseFloat(x));
-
-    if (last60.length !== 60 || last60.some(isNaN)) {
-        resultDiv.style.display = "block";
-        resultDiv.innerHTML = "Please enter exactly 60 valid numbers.";
-        return;
-    }
-
-    resultDiv.style.display = "block";
-    resultDiv.innerHTML = "Predicting...";
-
-    try {
-        const response = await fetch("/predict", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ last_60_days: last60 })
-        });
-        const data = await response.json();
-        let html = "";
-        data.next_7_days_prediction.forEach(day => {
-            html += `Day ${day.day}: ${day.predicted_price.toFixed(2)} <br>
-                     Confidence: [${day.lower_bound.toFixed(2)}, ${day.upper_bound.toFixed(2)}]<br><br>`;
-        });
-        resultDiv.innerHTML = html;
-    } catch(err) {
-        resultDiv.innerHTML = "Error predicting. Try again.";
-        console.error(err);
-    }
-}
-</script>
-
+        {% if prediction_text %}
+        <div class="result">
+            <h3>{{ prediction_text }}</h3>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>
