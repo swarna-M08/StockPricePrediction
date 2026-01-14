@@ -1,45 +1,52 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import numpy as np
 import pickle
 from tensorflow.keras.models import load_model
 
-# Load trained model and scaler
+# Load model and scaler
 model = load_model("lstm_model.h5")
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
+# FastAPI app
 app = FastAPI(title="Stock Price Prediction API")
 
-# Input schema
+# Templates
+templates = Jinja2Templates(directory="templates")
+
+# Serve static if needed
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Pydantic input model
 class StockInput(BaseModel):
-    last_60_days: list  # list of last 60 closing prices
+    last_60_days: list
 
-@app.get("/")
-def home():
-    return {"message": "Welcome to Stock Price Prediction API"}
+# Home page
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
+# Prediction API
 @app.post("/predict")
-def predict_stock(input_data: StockInput):
+async def predict_stock(input_data: StockInput):
     data = np.array(input_data.last_60_days).reshape(-1,1)
     scaled_data = scaler.transform(data)
+    X_input = scaled_data.reshape(1,60,1)
 
-    # Prepare LSTM input
-    X_input = scaled_data.reshape(1, 60, 1)
-
-    # Predict next 7 days
     predictions = []
     current_batch = X_input.copy()
+
     for i in range(7):
         pred = model.predict(current_batch)[0,0]
         predictions.append(pred)
         current_batch = np.append(current_batch[:,1:,:], [[[pred]]], axis=1)
 
-    # Inverse transform to original scale
     predicted_prices = scaler.inverse_transform(np.array(predictions).reshape(-1,1)).flatten()
-
-    # Calculate confidence band (±1.96*std)
-    error_std = np.std(predicted_prices) * 0.05  # simple approx 5% error
+    error_std = np.std(predicted_prices) * 0.05
     upper_band = predicted_prices + 1.96*error_std
     lower_band = predicted_prices - 1.96*error_std
 
